@@ -28,7 +28,7 @@ class MainViewModel: ViewModel() {
 }
 
 data class GameState(
-    val movingObjectParams: List<MovingObjectParams>,
+    val movingObjectParamsToTypes: List<Pair<MovingObjectParams, ObjectType>>,
     val moveVisualEffects: List<MoveVisualEffect>
 )
 

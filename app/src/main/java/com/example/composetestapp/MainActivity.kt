@@ -87,66 +87,39 @@ class MainActivity : AppCompatActivity() {
                     pivot = moveVisualEffect.coords.toOffset()
                 ) {
                     val maxLen = (moveVisualEffect.velocity.length()*moveVisualEffect.progress*100).toFloat()
-                    drawFireArc(
+                    drawFireArcEffect(
                         center = (moveVisualEffect.coords + (10.0 to -5.0)*3).toOffset(),
                         maxLen = maxLen,
                         progress = moveVisualEffect.progress
                     )
-                    drawFireArc(
+                    drawFireArcEffect(
                         center = (moveVisualEffect.coords + (10.0 to 5.0)*3).toOffset(),
                         maxLen = maxLen,
                         progress = moveVisualEffect.progress
                     )
-//                    drawArc(
-//                        color = Color.Yellow,
-//                        topLeft = (moveVisualEffect.coords - (10.0 to -5.0)*3).toOffset(),
-//                        startAngle = 22f,
-//                        sweepAngle = -44f,
-//                        useCenter = true,
-//                        size = Size(maxLen, maxLen),
-//                        alpha = 1f - moveVisualEffect.progress,
-//                    )
                 }
             }
-            gameState.value.movingObjectParams.forEach { movingObjectParams ->
-                rotateRad(
-                    radians = atan2(movingObjectParams.direction.second,movingObjectParams.direction.first).toFloat(),
-                    pivot = movingObjectParams.coords.toOffset()
-                ) {
-                    drawLine(
-                        color = Color.Red,
-                        start = (movingObjectParams.coords - (10.0 to -5.0)*3).toOffset(),
-                        end = (movingObjectParams.coords + (10.0 to 0.0)*3).toOffset(),
-                        strokeWidth = 5.0f
+            gameState.value.movingObjectParamsToTypes.forEach { movingObjectParamsToType ->
+                val (movingObjectParams, type) = movingObjectParamsToType
+                when (type) {
+                    is ObjectType.Spaceship -> drawSpaceship(
+                        movingObjectParams = movingObjectParams
                     )
-                    drawLine(
-                        color = Color.Red,
-                        start = (movingObjectParams.coords + (10.0 to 0.0)*3).toOffset(),
-                        end = (movingObjectParams.coords - (10.0 to 5.0)*3).toOffset(),
-                        strokeWidth = 5.0f
+                    is ObjectType.Coin -> drawCoin(
+                        movingObjectParams = movingObjectParams,
+                        coin = type
+                    )
+                    is ObjectType.Asteroid -> drawAsteroid(
+                        movingObjectParams = movingObjectParams,
+                        asteroid = type
                     )
                 }
             }
-//            drawRoundRect(
-//                brush = Brush.linearGradient(colors = instaColors),
-//                cornerRadius = CornerRadius(60f, 60f),
-//                style = Stroke(width = 15f, cap = StrokeCap.Round)
-//            )
-//            drawCircle(
-//                brush = Brush.linearGradient(colors = instaColors),
-//                radius = 45f,
-//                style = Stroke(width = 15f, cap = StrokeCap.Round)
-//            )
-//            drawCircle(
-//                brush = Brush.linearGradient(colors = instaColors),
-//                radius = 13f,
-//                center = Offset(this.size.width * .80f, this.size.height * 0.20f),
-//            )
         }
     }
 }
 
-fun DrawScope.drawFireArc(center: Offset, maxLen: Float, progress: Float) {
+fun DrawScope.drawFireArcEffect(center: Offset, maxLen: Float, progress: Float) {
     drawArc(
         color = Color.Yellow,
         topLeft = center.copy(x = center.x - maxLen, y = center.y - maxLen),
@@ -155,6 +128,42 @@ fun DrawScope.drawFireArc(center: Offset, maxLen: Float, progress: Float) {
         useCenter = true,
         size = Size(maxLen, maxLen),
         alpha = 1f - progress,
+    )
+}
+
+fun DrawScope.drawSpaceship(movingObjectParams: MovingObjectParams) {
+    rotateRad(
+        radians = atan2(movingObjectParams.direction.second,movingObjectParams.direction.first).toFloat(),
+        pivot = movingObjectParams.coords.toOffset()
+    ) {
+        drawLine(
+            color = Color.Red,
+            start = (movingObjectParams.coords - (10.0 to -5.0)*3).toOffset(),
+            end = (movingObjectParams.coords + (10.0 to 0.0)*3).toOffset(),
+            strokeWidth = 5.0f
+        )
+        drawLine(
+            color = Color.Red,
+            start = (movingObjectParams.coords + (10.0 to 0.0)*3).toOffset(),
+            end = (movingObjectParams.coords - (10.0 to 5.0)*3).toOffset(),
+            strokeWidth = 5.0f
+        )
+    }
+}
+
+fun DrawScope.drawCoin(movingObjectParams: MovingObjectParams, coin: ObjectType.Coin) {
+    drawCircle(
+        color = Color.Blue,
+        center = movingObjectParams.coords.toOffset(),
+        radius = coin.radius.toFloat()
+    )
+}
+
+fun DrawScope.drawAsteroid(movingObjectParams: MovingObjectParams, asteroid: ObjectType.Asteroid) {
+    drawCircle(
+        color = Color.Green,
+        center = movingObjectParams.coords.toOffset(),
+        radius = asteroid.radius.toFloat()
     )
 }
 

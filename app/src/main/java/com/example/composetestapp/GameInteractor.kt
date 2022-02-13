@@ -19,7 +19,9 @@ interface IGameInteractor {
 
 class GameInteractor: IGameInteractor {
     private val playerTouchController = ForceTouchController()
-    private val movingEngine = setupGameEngine(playerTouchController)
+    private val moveEngineToCollisionEngine = setupGameEngine(playerTouchController)
+    private val moveEngine = moveEngineToCollisionEngine.first
+    private val collisionEngine = moveEngineToCollisionEngine.second
     private val gameTimer: ITimer = Timer()
     private var gameJob: Job? = null
 
@@ -48,20 +50,25 @@ class GameInteractor: IGameInteractor {
             gameJob = launch(Dispatchers.Default) {
                while (true) {
                    sleep(GAME_TICK_MS)
-                   movingEngine.update(gameTimer.timeSinceLastRequestMs())
+                   moveEngine.update(gameTimer.timeSinceLastRequestMs())
                    val currentTime = gameTimer.currentTime()
                    removeExpiredVisualEffects(
                        currentTime = currentTime,
                        expirationTime = VISUAL_EFFECT_EXPIRATION_TIME_MS
                    )
                    updateVisualEffectsProgress(currentTime = currentTime)
-                   val movingObjectParams = movingEngine.movingObjectsParams
-                   val newVisualEffects = movingObjectParams
+
+                   collisionEngine.detectAndHandleAllCollisions()
+
+                   val movingObjectParamsToTypes = moveEngine.movingObjectsParamsToTypes
+                   val newSpaceshipsVisualEffects = movingObjectParamsToTypes
+                       .filter { it.second is ObjectType.Spaceship }
+                       .map { it.first }
                        .filter { it.velocity.first.absoluteValue > 0.01 || it.velocity.second.absoluteValue > 0.01 }
                        .map { it.toRawMoveVisualEffect() }
-                   timestampsToVisualEffects.add(VisualEffectProgress(currentTime, 0f) to newVisualEffects)
+                   timestampsToVisualEffects.add(VisualEffectProgress(currentTime, 0f) to newSpaceshipsVisualEffects)
                    gameState.value = GameState(
-                       movingObjectParams = movingObjectParams,
+                       movingObjectParamsToTypes = movingObjectParamsToTypes,
                        moveVisualEffects = activeVisualEffects
                    )
                }
@@ -79,7 +86,7 @@ class GameInteractor: IGameInteractor {
 
     companion object {
         val EMPTY_GAME_STATE = GameState(
-            movingObjectParams = emptyList(),
+            movingObjectParamsToTypes = emptyList(),
             moveVisualEffects = emptyList()
         )
 
