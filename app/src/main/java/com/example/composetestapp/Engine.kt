@@ -3,12 +3,10 @@ package com.example.composetestapp
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlin.math.absoluteValue
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 import kotlin.random.Random
 
-fun setupGameEngine(forceTouchController: ForceTouchController): Pair<MoveEngine, CollisionEngine> {
+fun setupGameEngine(forceTouchController: ForceTouchController, gameField: GameField): Pair<MoveEngine, CollisionEngine> {
     val forceEngine = ForceEngineImpl()
     val moveEngine = MoveEngineImpl(forceEngine)
 
@@ -25,7 +23,7 @@ fun setupGameEngine(forceTouchController: ForceTouchController): Pair<MoveEngine
             coinCreator?.invoke()
         }
     coinCreator = {
-        val coin = createRandomCoin()
+        val coin = createRandomMovingCoin(gameField)
         collisionEngine.addCollidableObject(coin)
         collisionHandler.addCollisionHandlerForHittedObject(coin, coinOnCollisionRemover)
         if (coin is MovingObject) {
@@ -34,28 +32,9 @@ fun setupGameEngine(forceTouchController: ForceTouchController): Pair<MoveEngine
     }
     val asteroidOnCollisionSpaceshipDestroyer = AsteroidCollisionHandler(objectRemover = removeObjectMediator)
 
-//    val player = FrictingSpaceship(
-//        startCoords = Coords(10.0, 10.0),
-//        startVelocity = ZERO_VECTOR,
-//        friction = BASE_FRICTION
-//    )
-//    val immobileCoin = CoinObject(
-//        startCoords = Coords(600.0, 600.0),
-//        startVelocity = ZERO_VECTOR,
-//        formula = ignoreForceFormula,
-//        radius = 30.0
-//    )
-
-    val spaceships = buildList(5) { createRandomFrictingSpaceship(random.nextInt(from = 95, until = 99)) }
-//        listOf(
-//        player,
-//        createRandomFrictingSpaceship(96),
-//        createRandomFrictingSpaceship(97),
-//        createRandomFrictingSpaceship(98),
-//        createRandomFrictingSpaceship(99)
-//    )
-    val coins = buildList(6) { createRandomCoin() }
-    val asteroids = buildList(3) { createRandomAsteroid() }
+    val spaceships = buildList(5) { createRandomFrictingSpaceship(gameField, random.nextInt(from = 95, until = 99)) }
+    val coins = buildList(6) { createRandomMovingCoin(gameField) }
+    val asteroids = buildList(3) { createRandomAsteroid(gameField) }
 
     spaceships.forEach { spaceship ->
         forceEngine.addObjectController(spaceship.objectId, forceTouchController)
@@ -79,6 +58,11 @@ fun setupGameEngine(forceTouchController: ForceTouchController): Pair<MoveEngine
 
     return moveEngine to collisionEngine
 }
+
+data class GameField(
+    val width: Int,
+    val height: Int
+)
 
 fun repeat(times: Int, action: (() -> Unit)) {
     if (times >= 1) {
@@ -126,12 +110,31 @@ val ignoreForceFormula: MoveFormulaType = { coords, velocity, deltaT, _ ->
     )
 }
 
+fun verticalSinCoordinateFormula(startingCoords: Coords, maxDeviation: Double): MoveFormulaType {
+    val totalTime = TotalTime(0.0)
+    val periodInSeconds = random.nextDouble(from=0.5, until=3.0)
+    val deviation = random.nextDouble(from=maxDeviation/2, until = maxDeviation)
+    val formula: MoveFormulaType = { coords, velocity, deltaT, _ ->
+        totalTime.seconds += deltaT/1000.0
+        val arg = totalTime.seconds*PI/periodInSeconds
+        val newVelocity = Vector(0.0, cos(arg)*deviation)
+        MovingObjectParams(
+            coords = startingCoords + Coords(0.0, sin(arg)*deviation),
+            velocity = newVelocity,
+            direction = newVelocity
+        )
+    }
+    return formula
+}
+
+class TotalTime(var seconds: Double)
+
 val random = Random(1)
-fun createRandomFrictingSpaceship(friction: Int): FrictingSpaceship {
+fun createRandomFrictingSpaceship(gameField: GameField, friction: Int): FrictingSpaceship {
     return FrictingSpaceship(
         startCoords = Coords(
-            random.nextDouble(300.0),
-            random.nextDouble(300.0)
+            random.nextDouble(gameField.width.toDouble()),
+            random.nextDouble(gameField.height.toDouble())
         ),
         startVelocity = ZERO_VECTOR,
         friction = friction
@@ -150,18 +153,35 @@ fun createRandomCoin(): CoinObject {
     )
 }
 
-fun createRandomAsteroid(): AsteroidObject {
+fun createRandomMovingCoin(gameField: GameField, coinRadius: Double = 30.0, maxDeviation: Double = 50.0): CoinObject {
+    val startCoords = Coords(
+        random.nextDouble(gameField.width.toDouble()),
+        random.nextDouble(gameField.height.toDouble())
+    )
+    return CoinObject(
+        startCoords = startCoords,
+        startVelocity = ZERO_VECTOR,
+        formula = verticalSinCoordinateFormula(startingCoords = startCoords, maxDeviation = maxDeviation),
+        radius = coinRadius
+    )
+}
+
+fun createRandomAsteroid(
+    gameField: GameField,
+    asteroidRadius: Double = 20.0,
+    maxVelocityCoordinate: Double = 0.1
+): AsteroidObject {
     return AsteroidObject(
         startCoords = Coords(
-            random.nextDouble(600.0),
-            random.nextDouble(600.0)
+            random.nextDouble(gameField.width.toDouble()),
+            random.nextDouble(gameField.height.toDouble())
         ),
         startVelocity = Vector(
-            random.nextDouble(0.1),
-            random.nextDouble(0.1)
+            random.nextDouble(from = -maxVelocityCoordinate, until = maxVelocityCoordinate),
+            random.nextDouble(from = -maxVelocityCoordinate, until = maxVelocityCoordinate)
         ),
         formula = ignoreForceFormula,
-        radius = 20.0
+        radius = asteroidRadius
     )
 }
 
@@ -780,9 +800,9 @@ open class MovingObjectImpl(
         get() = MovingObjectParams(_coords, _velocity, _direction)
 
     override fun update(deltaT: Long, force: Vector) {
-        val (coordinates, vel) = formula(_coords, _velocity, deltaT, force)
-        _coords = coordinates
-        _velocity = vel
+        val movingObjectParams = formula(_coords, _velocity, deltaT, force)
+        _coords = movingObjectParams.coords
+        _velocity = movingObjectParams.velocity
     }
 }
 

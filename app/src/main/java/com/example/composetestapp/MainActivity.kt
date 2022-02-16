@@ -24,43 +24,34 @@ import kotlin.math.atan2
 
 @ExperimentalComposeUiApi
 class MainActivity : AppCompatActivity() {
-    val viewModel: MainViewModel by viewModels()
-
+    private val viewModel: MainViewModel by viewModels()
+    private lateinit var greeting: ComposeView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val greeting = findViewById<ComposeView>(R.id.greeting)
+        greeting = findViewById<ComposeView>(R.id.greeting)
         greeting.setContent {
-//            MdcTheme { // or AppCompatTheme
             instagramIcon(viewModel)
-//            }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.startGame()
+        greeting.post {
+            viewModel.startGame(
+                GameField(
+                    width = greeting.width,
+                    height = greeting.height
+                )
+            )
+        }
     }
 
     override fun onPause() {
         super.onPause()
         viewModel.pauseGame()
     }
-
-//    @Preview
-//    @Composable
-//    private fun Greeting() {
-//
-//        Text(
-//            text = stringResource(R.string.greetings),
-//            style = MaterialTheme.typography.h5,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = dimensionResource(R.dimen.margin_small))
-//                .wrapContentWidth(Alignment.CenterHorizontally)
-//        )
-//    }
 
     @ExperimentalComposeUiApi
     @Composable

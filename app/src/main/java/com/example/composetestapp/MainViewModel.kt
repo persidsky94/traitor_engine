@@ -16,9 +16,9 @@ class MainViewModel: ViewModel() {
         gameInteractor.setCurrentTouchCoords(touchCoords)
     }
 
-    fun startGame() {
+    fun startGame(gameField: GameField) {
         viewModelScope.launch {
-            gameInteractor.startEngine()
+            gameInteractor.startEngine(gameField = gameField)
         }
     }
 

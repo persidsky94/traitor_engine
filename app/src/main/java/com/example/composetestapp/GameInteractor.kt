@@ -11,7 +11,7 @@ import kotlin.math.absoluteValue
 
 interface IGameInteractor {
     fun setCurrentTouchCoords(coords: Coords?)
-    suspend fun startEngine()
+    suspend fun startEngine(gameField: GameField)
     fun stopEngine()
     val gameState: Flow<GameState>
 }
@@ -19,9 +19,9 @@ interface IGameInteractor {
 
 class GameInteractor: IGameInteractor {
     private val playerTouchController = ForceTouchController()
-    private val moveEngineToCollisionEngine = setupGameEngine(playerTouchController)
-    private val moveEngine = moveEngineToCollisionEngine.first
-    private val collisionEngine = moveEngineToCollisionEngine.second
+    private lateinit var moveEngineToCollisionEngine: Pair<MoveEngine, CollisionEngine>
+    private lateinit var moveEngine: MoveEngine
+    private lateinit var collisionEngine: CollisionEngine
     private val gameTimer: ITimer = Timer()
     private var gameJob: Job? = null
 
@@ -44,7 +44,16 @@ class GameInteractor: IGameInteractor {
             accList + moreEffects.second.map { it.toMoveVisualEffect(moreEffects.first.progress)}
         }
 
-    override suspend fun startEngine() {
+    private fun initEnginesIfNeeded(gameField: GameField) {
+        if (!this::moveEngineToCollisionEngine.isInitialized) {
+            moveEngineToCollisionEngine = setupGameEngine(playerTouchController, gameField)
+            moveEngine = moveEngineToCollisionEngine.first
+            collisionEngine = moveEngineToCollisionEngine.second
+        }
+    }
+
+    override suspend fun startEngine(gameField: GameField) {
+        initEnginesIfNeeded(gameField = gameField)
         gameTimer.startTimer()
         coroutineScope {
             gameJob = launch(Dispatchers.Default) {
