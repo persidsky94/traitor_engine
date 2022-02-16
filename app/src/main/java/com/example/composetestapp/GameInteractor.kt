@@ -1,5 +1,13 @@
 package com.example.composetestapp
 
+import com.example.composetestapp.engine.Coords
+import com.example.composetestapp.engine.GameField
+import com.example.composetestapp.engine.ObjectType
+import com.example.composetestapp.engine.setupGameEngine
+import com.example.composetestapp.engine.systems.collision.CollisionEngine
+import com.example.composetestapp.engine.systems.moving.MoveEngine
+import com.example.composetestapp.engine.systems.moving.MovingObjectParams
+import com.example.composetestapp.engine.systems.moving.force.ForceTouchController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -99,6 +107,7 @@ class GameInteractor: IGameInteractor {
             moveVisualEffects = emptyList()
         )
 
+        const val GAME_TICK_MS = (1000.0/120.0).toLong()
         const val VISUAL_EFFECT_EXPIRATION_TIME_MS = 1000L
     }
 }
