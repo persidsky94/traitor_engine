@@ -1,7 +1,7 @@
 package com.example.composetestapp.engine.systems.moving
 
 import com.example.composetestapp.engine.ObjId
-import com.example.composetestapp.engine.ObjectType
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 import com.example.composetestapp.engine.forEachParallel
 import com.example.composetestapp.engine.systems.moving.force.ForceEngine
 

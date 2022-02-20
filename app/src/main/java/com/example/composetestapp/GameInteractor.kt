@@ -1,13 +1,13 @@
 package com.example.composetestapp
 
-import com.example.composetestapp.engine.Coords
-import com.example.composetestapp.engine.GameField
-import com.example.composetestapp.engine.ObjectType
-import com.example.composetestapp.engine.setupGameEngine
+import com.example.composetestapp.engine.*
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 import com.example.composetestapp.engine.systems.collision.CollisionEngine
 import com.example.composetestapp.engine.systems.moving.MoveEngine
 import com.example.composetestapp.engine.systems.moving.MovingObjectParams
 import com.example.composetestapp.engine.systems.moving.force.ForceTouchController
+import com.example.composetestapp.engine.systems.moving.force.ForceTouchControllerForTraits
+import com.example.composetestapp.engine.systems.moving.system.MoveSystem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -26,15 +26,17 @@ interface IGameInteractor {
 
 
 class GameInteractor: IGameInteractor {
-    private val playerTouchController = ForceTouchController()
-    private lateinit var moveEngineToCollisionEngine: Pair<MoveEngine, CollisionEngine>
-    private lateinit var moveEngine: MoveEngine
-    private lateinit var collisionEngine: CollisionEngine
+    private val playerTouchControllerForTraits = ForceTouchControllerForTraits()
     private val gameTimer: ITimer = Timer()
     private var gameJob: Job? = null
 
+    private var engineInitialized = false
+    private lateinit var moveSystem: MoveSystem
+    private lateinit var gameEngine: GameEngine
+
+
     override fun setCurrentTouchCoords(coords: Coords?) {
-        playerTouchController.touchCoordinates = coords
+        playerTouchControllerForTraits.touchCoordinates = coords
     }
 
     private var timestampsToVisualEffects: MutableList<Pair<VisualEffectProgress, List<RawMoveVisualEffect>>> = mutableListOf()
@@ -53,10 +55,11 @@ class GameInteractor: IGameInteractor {
         }
 
     private fun initEnginesIfNeeded(gameField: GameField) {
-        if (!this::moveEngineToCollisionEngine.isInitialized) {
-            moveEngineToCollisionEngine = setupGameEngine(playerTouchController, gameField)
-            moveEngine = moveEngineToCollisionEngine.first
-            collisionEngine = moveEngineToCollisionEngine.second
+        if (!engineInitialized) {
+            val moveSystemToGameEngine = setupGameEngineOnTraits(playerTouchControllerForTraits, gameField)
+            moveSystem = moveSystemToGameEngine.first
+            gameEngine = moveSystemToGameEngine.second
+            engineInitialized = true
         }
     }
 
@@ -67,7 +70,7 @@ class GameInteractor: IGameInteractor {
             gameJob = launch(Dispatchers.Default) {
                while (true) {
                    sleep(GAME_TICK_MS)
-                   moveEngine.update(gameTimer.timeSinceLastRequestMs())
+                   gameEngine.update(gameTimer.timeSinceLastRequestMs())
                    val currentTime = gameTimer.currentTime()
                    removeExpiredVisualEffects(
                        currentTime = currentTime,
@@ -75,17 +78,15 @@ class GameInteractor: IGameInteractor {
                    )
                    updateVisualEffectsProgress(currentTime = currentTime)
 
-                   collisionEngine.detectAndHandleAllCollisions()
-
-                   val movingObjectParamsToTypes = moveEngine.movingObjectsParamsToTypes
+                   val movingObjectParamsToTypes = moveSystem.movingObjectsParamsToTypes
                    val newSpaceshipsVisualEffects = movingObjectParamsToTypes
-                       .filter { it.second is ObjectType.Spaceship }
+                       .filter { it.second.objectType is ObjectType.Spaceship }
                        .map { it.first }
                        .filter { it.velocity.first.absoluteValue > 0.01 || it.velocity.second.absoluteValue > 0.01 }
                        .map { it.toRawMoveVisualEffect() }
                    timestampsToVisualEffects.add(VisualEffectProgress(currentTime, 0f) to newSpaceshipsVisualEffects)
                    gameState.value = GameState(
-                       movingObjectParamsToTypes = movingObjectParamsToTypes,
+                       movingObjectParamsToTypes = movingObjectParamsToTypes.map { it.first to it.second.objectType},
                        moveVisualEffects = activeVisualEffects
                    )
                }

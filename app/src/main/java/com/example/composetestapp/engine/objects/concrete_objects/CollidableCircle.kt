@@ -1,7 +1,7 @@
 package com.example.composetestapp.engine.objects.concrete_objects
 
 import com.example.composetestapp.engine.Coords
-import com.example.composetestapp.engine.ObjectType
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 import com.example.composetestapp.engine.Vector
 import com.example.composetestapp.engine.systems.collision.CollidableObject
 import com.example.composetestapp.engine.systems.collision.hitboxes.CircleHitboxTemplate

@@ -1,9 +1,11 @@
 package com.example.composetestapp.engine.systems.moving
 
 import com.example.composetestapp.engine.*
+import com.example.composetestapp.engine.objects.concrete_objects.MovingFrictingObject
 import com.example.composetestapp.engine.objects.random
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
 
 data class MovingObjectParams(
@@ -20,6 +22,15 @@ val ignoreForceFormula: MoveFormulaType = { coords, velocity, deltaT, _ ->
         velocity = velocity,
         direction = velocity
     )
+}
+
+fun standardFormulaWithForceAndFriction(friction: Int): MoveFormulaType = { coords, velocity, deltaT, force ->
+    val _coords = coords + velocity*deltaT
+    val frictionQuotient = friction.toFloat()/100.0
+    val ticks = deltaT.toDouble()/ FRICTION_TICKS_MS
+    val _velocity = velocity*frictionQuotient.pow(ticks) + force*deltaT
+
+    MovingObjectParams(_coords, _velocity, _velocity)
 }
 
 fun verticalSinCoordinateFormula(startingCoords: Coords, maxDeviation: Double): MoveFormulaType {
@@ -40,3 +51,5 @@ fun verticalSinCoordinateFormula(startingCoords: Coords, maxDeviation: Double): 
 }
 
 private class TotalTime(var seconds: Double)
+
+const val FRICTION_TICKS_MS = 1000.0/(60.0*1.0)

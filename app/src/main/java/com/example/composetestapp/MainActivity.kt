@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.example.composetestapp.GameInteractor.Companion.EMPTY_GAME_STATE
 import com.example.composetestapp.engine.*
 import com.example.composetestapp.engine.systems.moving.MovingObjectParams
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 import kotlin.math.atan2
 
 @ExperimentalComposeUiApi
@@ -148,7 +149,7 @@ fun DrawScope.drawCoin(movingObjectParams: MovingObjectParams, coin: ObjectType.
     drawCircle(
         color = Color.Blue,
         center = movingObjectParams.coords.toOffset(),
-        radius = coin.radius.toFloat()
+        radius = coin.radius.toFloat() // TODO: move to render system
     )
 }
 

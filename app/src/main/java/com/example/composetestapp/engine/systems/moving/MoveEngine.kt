@@ -1,6 +1,7 @@
 package com.example.composetestapp.engine.systems.moving
 
 import com.example.composetestapp.engine.*
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 
 interface MoveEngine {
     suspend fun update(deltaT: Long)

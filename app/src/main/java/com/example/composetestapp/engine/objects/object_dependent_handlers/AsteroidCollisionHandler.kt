@@ -1,6 +1,6 @@
 package com.example.composetestapp.engine.objects.object_dependent_handlers
 
-import com.example.composetestapp.engine.ObjectType
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 import com.example.composetestapp.engine.systems.removation.RemoveObjectMediator
 import com.example.composetestapp.engine.systems.collision.CollidableObject
 import com.example.composetestapp.engine.systems.collision.collision_handling.CollisionHandler

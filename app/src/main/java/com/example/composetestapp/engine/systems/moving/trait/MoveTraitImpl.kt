@@ -1,17 +1,27 @@
-package com.example.composetestapp.engine.systems.moving
+package com.example.composetestapp.engine.systems.moving.trait
 
 import com.example.composetestapp.engine.*
-import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
+import com.example.composetestapp.engine.objects.base.BaseTrait
+import com.example.composetestapp.engine.systems.moving.MovingObjectParams
+import com.example.composetestapp.engine.traits_without_systems.position.MutablePositionTrait
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectTypeTrait
 import kotlin.math.absoluteValue
 
-open class MovingObjectImpl(
-    override val objectType: ObjectType,
-    startCoords: Coords,
+class MoveTraitImpl(
+    override val objectTypeTrait: ObjectTypeTrait,
     startVelocity: Vector,
     private val formula: (Coords, Vector, Long, Vector) -> MovingObjectParams,
-    override val objectId: ObjId = EngineObject.generateNextObjId()
-): MovingObject {
-    private var _coords: Coords = startCoords
+    private val positionTrait: MutablePositionTrait,
+    override val parentObjId: ObjId,
+    override val traitObjId: TraitObjId = BaseTrait.generateNextTraitObjId()
+) : MoveTrait {
+    private var _coords: Coords
+        get() {
+            return positionTrait.coords
+        }
+        set(value) {
+            positionTrait.coords = value
+        }
 
     private var _velocity: Vector = startVelocity
         set(value) {

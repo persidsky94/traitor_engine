@@ -1,5 +1,7 @@
 package com.example.composetestapp.engine
 
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
+
 interface EngineObject {
     val objectId: ObjId
     val objectType: ObjectType
@@ -10,10 +12,4 @@ interface EngineObject {
             return ++nextFreeId
         }
     }
-}
-
-sealed class ObjectType {
-    class Spaceship: ObjectType()
-    class Coin(val radius: Double): ObjectType()
-    class Asteroid(val radius: Double): ObjectType()
 }

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.composetestapp.engine.Coords
 import com.example.composetestapp.engine.GameField
-import com.example.composetestapp.engine.ObjectType
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 import com.example.composetestapp.engine.Vector
 import com.example.composetestapp.engine.systems.moving.MovingObjectParams
 import kotlinx.coroutines.flow.Flow

@@ -1,10 +1,10 @@
 package com.example.composetestapp.engine.objects.concrete_objects
 
 import com.example.composetestapp.engine.*
-import com.example.composetestapp.engine.objects.concrete_objects.MovingFrictingObject
 import com.example.composetestapp.engine.systems.collision.CollidableObject
 import com.example.composetestapp.engine.systems.collision.hitboxes.CircleHitboxTemplate
 import com.example.composetestapp.engine.systems.collision.hitboxes.NoHitboxTemplate
+import com.example.composetestapp.engine.traits_without_systems.type.ObjectType
 
 class FrictingSpaceship(
     startCoords: Coords = ZERO_COORDS,
@@ -27,3 +27,4 @@ class FrictingSpaceship(
         return params.coords
     }
 }
+
